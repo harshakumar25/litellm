@@ -53,6 +53,9 @@ func TestTeamMemberAddCreateSendsMemberSettings(t *testing.T) {
 		t.Fatalf("create failed: %v", err)
 	}
 
+	if addPayload["max_budget_in_team"] != 25.0 {
+		t.Fatalf("member_add payload sent max_budget_in_team %v, want 25", addPayload["max_budget_in_team"])
+	}
 	if addPayload["budget_duration"] != "30d" {
 		t.Fatalf("member_add payload sent budget_duration %v, want 30d", addPayload["budget_duration"])
 	}
@@ -111,7 +114,7 @@ func TestTeamMemberAddCreateOmitsUnsetSettings(t *testing.T) {
 		t.Fatalf("create failed: %v", err)
 	}
 
-	for _, field := range []string{"tpm_limit", "rpm_limit", "budget_duration", "allowed_models"} {
+	for _, field := range []string{"max_budget_in_team", "tpm_limit", "rpm_limit", "budget_duration", "allowed_models"} {
 		if _, ok := addPayload[field]; ok {
 			t.Fatalf("member_add payload must not carry unset %s, got %v", field, addPayload[field])
 		}
@@ -237,12 +240,12 @@ func TestTeamMemberAddUpdateSendsChangedSettings(t *testing.T) {
 
 func TestTeamMemberAddUpdateClearsRemovedSettings(t *testing.T) {
 	d := newTeamMemberUpdateResourceData(t,
-		map[string]string{"tpm_limit": "1000", "rpm_limit": "10", "budget_duration": "30d", "allowed_models.#": "1", "allowed_models.0": "gpt-5.2"},
+		map[string]string{"max_budget_in_team": "25", "tpm_limit": "1000", "rpm_limit": "10", "budget_duration": "30d", "allowed_models.#": "1", "allowed_models.0": "gpt-5.2"},
 		map[string]string{"allowed_models.#": "0"},
 	)
 
 	update := runTeamMemberUpdate(t, d)[0]
-	for _, field := range []string{"tpm_limit", "rpm_limit", "budget_duration"} {
+	for _, field := range []string{"max_budget_in_team", "tpm_limit", "rpm_limit", "budget_duration"} {
 		v, present := update[field]
 		if !present {
 			t.Fatalf("member_update payload omitted removed %s, so the proxy would keep the old value", field)
